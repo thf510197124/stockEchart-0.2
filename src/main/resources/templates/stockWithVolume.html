@@ -1,0 +1,100 @@
+<!--
+    THIS EXAMPLE WAS DOWNLOADED FROM https://echarts.apache.org/examples/zh/editor.html?c=candlestick-sh
+-->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" style="height: 100%">
+<head>
+    <meta charset="utf-8">
+    <title>股票显示</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.css"/>
+</head>
+<body style="height: 100%; margin: 0">
+    <div class="query" style="height:5%">
+        <form action="getStock" method="post">
+            <span>
+                <label for="symbol">代码</label>
+                <input type="text" name="symbol" id="symbol" th:value ="${symbol}"/>
+            </span>
+            <span>
+                <label for="datefrom">起始时间</label>
+                <input type="text" name="date1" id="datefrom" th:value ="${date1}"/>
+            </span>
+            <span>
+                <label for="dateto">结束时间</label>
+                <input type="text" name="date2" id="dateto" th:value ="${date2}"/>
+            </span>
+            <span>
+                <label for="freq">周期</label>
+                <select id="freq" name="freq">
+                    <option value ="YEAR">年线</option>
+                    <option value ="QUARTER">季线</option>
+                    <option value="MONTH">月线</option>
+                    <option value="WEEK">周线</option>
+                    <option value ="DAY">日线</option>
+                    <option value ="HOUR">60分钟</option>
+                    <option value="MIN30">30分钟</option>
+                    <option value="MIN15">15分钟</option>
+                    <option value="MIN5">5分钟</option>
+                    <option value="MIN">1分钟</option>
+                </select>
+            </span>
+            <span>
+                <label>
+                    <input type="submit" value="提交"/>
+                </label>
+            </span>
+
+        </form>
+    </div>
+    <div id="container" style="height: 100%"></div>
+    <script th:src="@{echarts-5.min.js}"></script>
+    <script th:src="@{jquery-3.3.1.min.js}"></script>
+    <script th:src="@{bootstrap_4.0.0.js}"></script>
+    <script th:src="@{data.js}"></script>
+    <script type="text/javascript" th:inline="javascript">
+        $(document).ready(function(){
+            let frequency = [[${frequency}]];
+            $("#freq option[value= " + frequency + "]").prop("selected",true);
+        });
+
+        let dom = document.getElementById("container");
+        let myChart = echarts.init(dom);
+        let option;
+
+        let candlesData=[[${candlesData}]];
+        let data = splitData(candlesData);
+
+        let macd = {
+            macds:[[${macds}]],
+            diffs: [[${diffs}]],
+            deas:[[${deas}]]
+        }
+        let constant = {
+            title:[[${title}]],
+            freq:[[${freqStr}]]
+        }
+        let color={
+            upColor:'#ec0000',
+            downColor:'#008F28'
+        }
+        let analyze = {
+            fxs:[[${fx}]],
+            bisCenter:[[${bisCenter}]],
+            xdData:[[${xds}]]
+        }
+        option = options(analyze,data,color,macd,constant);
+
+        if (option && typeof option === 'object') {
+            myChart.setOption(option,true);
+        }
+
+</script>
+</body>
+<style>
+    .query{
+        margin-top:10px;
+        margin-left:100px;
+        margin-right:auto;
+    }
+</style>
+</html>

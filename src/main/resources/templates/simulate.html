@@ -1,0 +1,276 @@
+<!--
+    THIS EXAMPLE WAS DOWNLOADED FROM https://echarts.apache.org/examples/zh/editor.html?c=candlestick-sh
+-->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" style="height: 100%">
+<head>
+    <meta charset="utf-8">
+    <title>股票显示</title>
+    <style>
+        .link :hover{
+            background:#18A2B8;
+            color:black;
+        }
+        .split{
+            font-weight:bold;
+            color:RED;
+        }
+        .status{
+            background-color:#ecedee;
+            color:#bb2d3b;
+            border-radius:5px;
+        }
+    </style>
+
+</head>
+<body style="height: 100%; margin: 0">
+    <nav class="navbar navbar-expand-md bg-light navbar-light">
+        <div class="collapse navbar-collapse justify-content-end">
+            <ul class="navbar-nav nav-pills">
+                <li class="nav-item link">
+                    <a class="nav-link" href="/index">首页</a>
+                </li>
+                <li class="nav-item">
+                    <span class="split">|</span>
+                </li>
+                <li class="nav-item">
+                    <span class="navbar-brand">股票模拟</span>
+                </li>
+                <li class="nav-item link">
+                    <a class="nav-link" href="/allRSimulate">全随机</a>
+                </li>
+                <li class="nav-item link">
+                    <a class="nav-link" href="/bSimulate">从头开始</a>
+                </li>
+                <li class="nav-item link">
+                    <a class="nav-link" href="/rMSimulate">近几个月</a>
+                </li>
+                <li class="nav-item link">
+                    <a class="nav-link" href="/rYSimulate">近几年</a>
+                </li>
+                <li class="nav-item">
+                    <form action="/solid" method="post">
+                        <div class="input-group">
+                            <input type="text" class="form-control input-group-sm" id="symbol"
+                                   name="symbol" placeholder="股票代码"/>
+                            <input type="text" class="form-control input-group-sm" id="date"
+                                   name="date" placeholder="开始时间"/>
+                            <input type="submit" class="btn btn-primary" value="提交"/>
+                        </div>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </nav>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-6 status">
+                    <span class="status"></span>
+                </div>
+                <div class="col-lg-2 col-md-2">
+                    <button type="button" onClick="buy()" class="buy btn btn-info">买入</button>
+                    <button type="button" onClick="sell()" class="sell btn btn-danger">卖出</button>
+                </div>
+                <div class="col-lg-2 col-md-2">
+                    <a href="/nextDay"><input type="button" value="下一天" class="nextDay btn btn-info"/></a>
+                </div>
+            </div>
+
+        </div>
+        <ul class="nav nav-tabs" role="tablist" id="myTab">
+            <li class="nav-item">
+                <a href="#container1" class="nav-link active" data-toggle="tab">日线</a>
+            </li>
+            <li class="nav-item">
+                <a href="#container2" class="nav-link" data-toggle="tab">周线</a>
+            </li>
+            <li class="nav-item">
+                <a href="#container3" class="nav-link" data-toggle="tab">月线</a>
+            </li>
+        </ul>
+        <div id="myTabContent" class="tab-content" style="height: 90%">
+            <div class="container tab-pane active" id="container1" style="width: 100%;height: 90%">
+            </div>
+            <div class="container tab-pane fade" id="container2">
+            </div>
+            <div class="container tab-pane fade" id="container3">
+            </div>
+        </div>
+
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.css"/>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.0.0/echarts.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.js"></script>
+    <script th:src="@{data.js}"></script>
+    <script type="text/javascript" th:inline="javascript">
+        $(document).ready(function(){
+           $.ajax({
+               type:"GET",
+               url:"isInPosition",
+               success:function(data){
+                   if (data === true){
+                       $(".buy").hide();
+                       $(".sell").show();
+                       $.ajax({
+                           type: "GET",
+                           url: "position",
+                           contentType:'application/json;charset=utf-8',
+                           success: function(data){
+                               if(data.count === 0){
+                                   $(".sell").hide();
+                                   $(".buy").show();
+                               }else{
+                                   $(".status").text("买入价格：" + data.price + "；数量" + data.count +
+                                       "利润为：" + data.profit.toFixed(2) + ";总利润为：" + (data.money - 100000).toFixed(2));
+                                   $(".buyPrice").text("")
+                               }
+                           }
+                       })
+                   }else{
+                       $(".sell").hide();
+                       $(".buy").show();
+                   }
+               }
+           })
+        });
+        function buy(){
+            $.ajax({
+                type: "GET",
+                url: "buy",
+                contentType:'application/json;charset=utf-8',
+                success: function(data){
+                    $(".buyPrice").text("买入价格：" + data.price + "；数量" + data.count);
+                    $(".buy").hide();
+                    $(".sell").show();
+                }
+            })
+        }
+        function sell(){
+            $.ajax({
+                type:"GET",
+                url: "sell",
+                contentType: 'application/json;charset=utf-8',
+                success: function(data){
+                    $(".status").text("操作利润：" + data.profit);
+                }
+            })
+        }
+        let dom1 = document.getElementById("container1");
+        let option1,option2,option3;
+        let color={
+            upColor:'#ec0000',
+            downColor:'#008F28'
+        }
+
+        let candlesData1=[[${candlesData}]];
+        let data1 = splitData(candlesData1);
+        let lengthData = data1.categoryData.length;
+        if(data1.categoryData[lengthData-1] === data1.categoryData[lengthData - 2]){
+            $(".nextDay").attr("disabled","true");
+            data1.categoryData.pop();
+            data1.values.pop();
+            data1.volumes.pop();
+            $(".status").text("操作结束，总利润为：" + ([[${profit}]] - 100000).toFixed(2));
+        }
+        let macd1 = {
+            macds:[[${macds}]],
+            diffs: [[${diffs}]],
+            deas:[[${deas}]]
+        }
+        let constant1 = {
+            title:[[${title}]],
+            freq:[[${freqStr}]]
+        }
+
+        let analyze1 = {
+            fxs:[[${fx}]],
+            bisCenter:[[${bisCenter}]],
+            xdData:[[${xds}]]
+        }
+        option1 = options(analyze1,data1,color,macd1,constant1);
+        //设置slider的位置
+        let length = data1.categoryData.length;
+        option1.dataZoom[1].startValue = data1.categoryData[length - 100];
+        option1.dataZoom[1].endValue = data1.categoryData[length];
+        option1.dataZoom[0].startValue = data1.categoryData[length - 100];
+        option1.dataZoom[0].endValue = data1.categoryData[length];
+        option1.dataZoom[2].startValue = data1.categoryData[length - 100];
+        option1.dataZoom[2].endValue = data1.categoryData[length];
+        /*option1.dataZoom[1].start = 50;
+        option1.dataZoom[1].end = 100;
+        option1.dataZoom[0].start = 50;
+        option1.dataZoom[0].end = 100;
+        option1.dataZoom[2].start = 50;
+        option1.dataZoom[2].end = 100;*/
+        let candlesData2=[[${candlesData_w}]];
+        let data2 = splitData(candlesData2);
+
+        let macd2 = {
+            macds:[[${macds_w}]],
+            diffs: [[${diffs_w}]],
+            deas:[[${deas_w}]]
+        }
+        let constant2 = {
+            title:[[${title_w}]],
+            freq:[[${freqStr_w}]]
+        }
+
+        let analyze2 = {
+            fxs:[[${fx_w}]],
+            bisCenter:[[${bisCenter_w}]],
+            xdData:[[${xds_w}]]
+        }
+        option2 = options(analyze2,data2,color,macd2,constant2);
+
+        let candlesData3=[[${candlesData_m}]];
+        let data3 = splitData(candlesData3);
+
+        let macd3 = {
+            macds:[[${macds_m}]],
+            diffs: [[${diffs_m}]],
+            deas:[[${deas_m}]]
+        }
+        let constant3 = {
+            title:[[${title_m}]],
+            freq:[[${freqStr_m}]]
+        }
+
+        let analyze3 = {
+            fxs:[[${fx_m}]],
+            bisCenter:[[${bisCenter_m}]],
+            xdData:[[${xds_m}]]
+        }
+        option3 = options(analyze3,data3,color,macd3,constant3);
+
+        let myChart1 = echarts.init(dom1);
+        let dom2 = document.getElementById("container2");
+        let dom3 = document.getElementById("container3");
+        if (option1 && typeof option1 === 'object') {
+            myChart1.setOption(option1,true);
+        }
+        $('a[data-toggle="tab"]').on("shown.bs.tab",function(e){
+            let activeTab = $(e.target)[0].hash;
+            if (activeTab === "#container2"){
+                echarts.dispose($(dom2));
+                $(dom2).css("height","100%");
+                $(dom2).css("width","100%");
+                let myChart2 = echarts.init(dom2);
+                if (option2 && typeof option2 === 'object') {
+                    myChart2.setOption(option2,true);
+                }
+                myChart2.resize()
+            }else if (activeTab === "#container3"){
+                echarts.dispose($(dom3));
+                $(dom3).css("height","100%");
+                $(dom3).css("width","100%");
+                let myChart3 = echarts.init(dom3);
+                if (option3 && typeof option3 === 'object') {
+                    myChart3.setOption(option3,true);
+                }
+                myChart3.resize()
+            }
+        });
+    </script>
+
+</body>
+</html>

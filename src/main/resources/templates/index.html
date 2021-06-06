@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" style="height: 100%">
+<head>
+    <meta charset="utf-8">
+</head>
+<body style="height: 100%; margin: 0">
+        <div class="container">
+            <div class="group">
+                <div class="row">
+                    <h4>缠论分析</h4>
+                </div>
+                <div class="row">
+                    <div class="col-lg-1 col-md-1">
+                    </div>
+                    <form action="/getStock" method="post" class="form-inline">
+                        <div class="input-group">
+                            <div class="input-group-append">
+                                <span class="input-group-text">代码：</span>
+                            </div>
+                            <input type="text" name="symbol" id="symbol"/>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-append">
+                                <span class="input-group-text">起始时间：</span>
+                            </div>
+                            <input type="text" name="date1" id="datefrom"/>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-append">
+                                <span class="input-group-text">结束时间：</span>
+                            </div>
+                            <input type="text" name="date2" id="dateto"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="freq" class="form-control">周期：</label>
+                            <select id="freq" name="freq" class="form-control">
+                                <option value ="YEAR">年线</option>
+                                <option value ="QUARTER">季线</option>
+                                <option value="MONTH">月线</option>
+                                <option value="WEEK">周线</option>
+                                <option value ="DAY">日线</option>
+                                <option value ="HOUR">60分钟</option>
+                                <option value="MIN30">30分钟</option>
+                                <option value="MIN15">15分钟</option>
+                                <option value="MIN5">5分钟</option>
+                                <option value="MIN">1分钟</option>
+                            </select>
+                        </div>
+                        <input type="submit" class="btn btn-success" value="提交"/>
+                    </form>
+                </div>
+            </div>
+            <div class="group">
+                <div class="row">
+                    <h4>股票模拟</h4>
+                </div>
+                <div class="row">
+                    <div class="col-lg-2 col-md-2">
+                    </div>
+                    <div class="col-lg-2 col-md-2">
+                        <a href="/allRSimulate" class="btn-block"><input type="button" class="btn btn-success" value="全随机"/></a>
+                    </div>
+                    <div class="col-lg-2 col-md-2">
+                        <a href="/bSimulate" class="btn-block"><input type="button" class="btn btn-success" value="从上市开始"/></a>
+                    </div>
+                    <div class="col-lg-2 col-md-2">
+                        <a href="/rMSimulate" class="btn-block"><input type="button" class="btn btn-success"  value="最近几个月"/></a>
+                    </div>
+                    <div class="col-lg-2 col-md-2">
+                        <a href="/rYSimulate" class="btn-block"><input type="button" class="btn btn-success" value="近些年开始"/></a>
+                    </div>
+                    <div class="col-lg-2 col-md-2"></div>
+
+                </div>
+            </div>
+
+        </div>
+        <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.css"/>
+        <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.0.0/echarts.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.js"></script>
+</body>
+<style>
+    .query{
+        margin-top:10px;
+        margin-left:10px;
+        margin-right:auto;
+    }
+    .group{
+        margin:10px;
+    }
+    .group .row{
+        margin-top:20px;
+        margin-bottom:20px;
+    }
+</style>
+</html>

@@ -1,0 +1,430 @@
+<!--
+    THIS EXAMPLE WAS DOWNLOADED FROM https://echarts.apache.org/examples/zh/editor.html?c=candlestick-sh
+-->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" style="height: 100%">
+<head>
+    <meta charset="utf-8">
+    <title>股票显示</title>
+</head>
+<body style="height: 100%; margin: 0">
+<div class="query" style="height:5%">
+    <form action="getStock" method="post">
+            <span>
+                <label for="symbol">代码</label>
+                <input type="text" name="symbol" id="symbol" th:value ="${symbol}"/>
+            </span>
+        <span>
+                <label for="datefrom">起始时间</label>
+                <input type="text" name="date1" id="datefrom" th:value ="${date1}"/>
+            </span>
+        <span>
+                <label for="dateto">结束时间</label>
+                <input type="text" name="date2" id="dateto" th:value ="${date2}"/>
+            </span>
+        <span>
+                <label for="freq">周期</label>
+                <select id="freq" name="freq">
+                    <option value ="YEAR">年线</option>
+                    <option value ="QUARTER">季线</option>
+                    <option value="MONTH">月线</option>
+                    <option value="WEEK">周线</option>
+                    <option value ="DAY">日线</option>
+                    <option value ="HOUR">60分钟</option>
+                    <option value="MIN30">30分钟</option>
+                    <option value="MIN15">15分钟</option>
+                    <option value="MIN5">5分钟</option>
+                    <option value="MIN">1分钟</option>
+                </select>
+            </span>
+        <span>
+                <label>
+                    <input type="submit" value="提交"/>
+                </label>
+            </span>
+
+    </form>
+</div>
+<div id="container" style="height: 100%"></div>
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.css"/>
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.0.0/echarts.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.js"></script>
+<script type="text/javascript" th:inline="javascript">
+    let freq = [[${freqStr}]];
+    $(document).ready(function(){
+        let frequency = [[${frequency}]];
+        $("#freq option[value= " + frequency + "]").prop("selected",true);
+    });
+
+    var dom = document.getElementById("container");
+    var myChart = echarts.init(dom);
+    var option;
+    var upColor = '#ec0000';
+    var downColor = '#008F28';
+    let candlesData=[[${candlesData}]];
+
+    let title=[[${title}]];
+    let data = splitData(candlesData);
+    let macds = [[${macds}]];
+    let diffs = [[${diffs}]];
+    let deas = [[${deas}]];
+    let fxs = [[${fx}]];
+    let bisCenter = [[${bisCenter}]];//笔中的点已经存在于fx中，添加进去了
+    let xdData = [[${xds}]] //线段中的点已经存在于fx中，所以不用再添加了，但是线段中还需好添加起始和终点形成的线。
+
+    option = {
+        title: {
+            text: title,
+            left: 150
+        },
+        animation: false,
+        legend: {
+            top: 10,
+            left: 'center',
+            data: [freq, 'MA5', 'MA10', 'MA20', 'MA30']
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'cross',
+                lineStyle: {
+                    color: '#376df4',
+                    width: 2,
+                    opacity: 1
+                }
+            },
+            borderWidth: 1,
+            borderColor: '#ccc',
+            padding: 10,
+            borderRadius:4,
+            textStyle: {
+                color: '#000'
+            }
+
+            // extraCssText: 'width: 170px'
+        },
+        axisPointer: {//指定鼠标位置的十字的情况
+            link: {xAxisIndex: 'all'},
+            label: {
+                backgroundColor: '#777'
+            }
+        },
+        toolbox: {
+            feature: {
+                dataZoom: {
+                    yAxisIndex: false
+                },
+                brush: {
+                    type: ['lineX', 'clear']
+                }
+            }
+        },
+        brush: { //用于选择框，选中区域意外的透明度降低
+            xAxisIndex: 'all',
+            brushLink: 'all',
+            outOfBrush: {
+                colorAlpha: 0.1
+            }
+        },
+        //与成交量的现实相关，如果被注释掉，则成交量注视图是蓝色的。
+        visualMap: [
+            {
+                show: false,
+                seriesIndex: 5,//第5个数据
+                dimension: 2,
+                pieces: [{
+                    value: 1,
+                    color: downColor
+                }, {
+                    value: -1,
+                    color: upColor
+                }],
+            }
+        ],
+        grid: [//指定图表被分成几个部分
+            {
+                left: '5%',
+                right: '5%',
+                height: '50%',
+                borderColor:'#ccc',//好像不起作用
+                backgroundColor:'#efefef',//好像不起作用
+                borderWidth:1//好像不起作用
+            },{
+                left: '5%',
+                right: '5%',
+                top: '61%',
+                height: '10%',
+                borderColor:'#ccc',
+                borderWidth:1
+            },{
+                left: '5%',
+                right: '5%',
+                top: '72%',
+                height: '14%',
+                borderColor:'#ccc',
+                borderWidth:1
+            }
+        ],
+        xAxis: [
+            {
+                type: 'category',
+                data: data.categoryData,
+                scale: true,
+                boundaryGap: true,//如果为false，则最前和最后一个K线有一半在外边
+                axisLine: {onZero: false},
+                splitLine: {show: false},
+                splitNumber: 20,
+                min: 'dataMin',
+                max: 'dataMax',
+                axisPointer: {
+                    z: 100
+                }
+            },
+            {
+                type: 'category',
+                gridIndex: 1,
+                data: data.categoryData,
+                scale: true,
+                boundaryGap: true,
+                axisLine: {onZero: false},
+                axisTick: {show: false},
+                splitLine: {show: false},
+                axisLabel: {show: false},
+                splitNumber: 20,
+                min: 'dataMin',
+                max: 'dataMax'
+            },
+            {
+                type:"category",
+                gridIndex:2,
+                boundaryGap: true,
+                data:data.categoryData,
+                axisLabel:{show:false},
+                axisTick: {show: false},
+            }
+        ],
+        yAxis: [
+            {
+                max: function(value){
+                    return value.max *1.01;
+                },
+                min: function(value){
+                    return value.min * 0.99;
+                },
+                scale: true,
+                splitArea: {
+                    show: true
+                }
+            },
+            {
+                scale: true,
+                gridIndex: 1,
+                splitNumber: 3,
+                axisLabel: {
+                    show: true,
+                    formatter:'{value}手',
+                },
+                axisLine: {onZero:false},//应该是从0开始，比如45，50，坐标的起点仍为0
+                axisTick: {show: false},
+                splitLine: {show: false}
+            },
+            {
+                gridIndex:2,
+                splitNumber:4,
+                axisLabel: {show: true},
+                axisLine: {onZero:false},
+                axisTick: {show:false},
+                splitLine:{show:false}//分成4部分，分割线是否显示
+            }
+
+        ],
+        dataZoom: [
+            {
+                type: 'inside',
+                xAxisIndex: [0, 0],
+                /*start: 50,
+                end: 100*/
+            },
+            {
+                show: true,
+                xAxisIndex: [0, 1],
+                type: 'slider',
+                top: '87%',
+                /*start: 50,
+                end: 100*/
+            },{
+                show:false,
+                xAxisIndex:[0,2],
+                type:"inside",
+                /*start:50,
+                end:100*/
+            }
+        ],
+        //backgroundColor:'#efefef',
+        series: [
+            {
+                name: freq,
+                type: 'candlestick',
+                data: data.values,
+                itemStyle: {
+                    color: upColor,
+                    color0: downColor,
+                    borderColor: null,
+                    borderColor0: null
+                },
+                markPoint: {
+                    label: {
+                        normal: {
+                            formatter: function (param) {
+                                return param != null ? param.mark : '';
+                            }
+                        }
+                    },
+                    data:markDataPoint(fxs),
+                    tooltip: {
+                        formatter: function (param) {
+                            return param.name + '<br>' + (param.data.coord || '');
+                        }
+                    }
+                },
+                markLine: {
+                    symbol: ['none', 'none'],
+                    /*itemStyle: {
+                        normal: {
+                            lineStyle: {
+                                type: 'solid'
+                            },
+                            label: {
+                                show: true,
+                                position: 'end'
+                            }
+                        },
+                    },*/
+                    data: addXDLine(fxs,bisCenter,xdData),
+                },
+                tooltip: {
+                    formatter: function (param) {
+                        param = param[0];
+                        return [
+                            'Date: ' + param.name + '<hr size=1 style="margin: 3px 0">',
+                            'Open: ' + param.data[0] + '<br/>',
+                            'Close: ' + param.data[1] + '<br/>',
+                            'Lowest: ' + param.data[2] + '<br/>',
+                            'Highest: ' + param.data[3] + '<br/>'
+                        ].join('');
+                    }
+                }
+            },
+            {
+                name: 'MA5',
+                type: 'line',
+                data: calculateMA(5, data),
+                smooth: true,
+                symbol:"circle",
+                symbolSize:1,
+                lineStyle: {
+                    width: 1,
+                    opacity: 0.5
+                }
+            },
+            {
+                name: 'MA10',
+                type: 'line',
+                data: calculateMA(10, data),
+                smooth: true,
+                symbol:"circle",
+                symbolSize:1,
+                lineStyle: {
+                    width: 1,
+                    opacity: 0.5
+                }
+            },
+            {
+                name: 'MA20',
+                type: 'line',
+                data: calculateMA(20, data),
+                smooth: true,
+                symbol:"circle",
+                symbolSize:1,
+                lineStyle: {
+                    width: 1,
+                    opacity: 0.5
+                }
+            },
+            {
+                name: 'MA30',
+                type: 'line',
+                data: calculateMA(30, data),
+                smooth: true,
+                symbol:"circle",
+                symbolSize:1,
+                lineStyle: {
+                    width: 1,
+                    opacity: 0.5
+                }
+            },
+            {
+                name: 'Volume',
+                type: 'bar',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                data: data.volumes,
+            },
+            {
+                name:'MACD',
+                type:'bar',
+                barWidth:2,
+                xAxisIndex:2,
+                yAxisIndex:2,
+                data:macds,
+                itemStyle: {
+                    normal: {
+                        color: function(params) {
+                            var colorList;
+                            if (params.data >= 0) {
+                                colorList = upColor;
+                            } else {
+                                colorList = downColor;
+                            }
+                            return colorList;
+                        },
+                    }
+                }
+            },
+            {
+                name:'DIFF',
+                type:"line",
+                xAxisIndex:2,
+                yAxisIndex:2,
+                data:diffs,
+                symbol:"circle",
+                symbolSize:1,
+                lineStyle: {
+                    color:'#D2691E',
+                    width: 1,
+                }
+            },
+            {
+                name:"DEA",
+                type:'line',
+                xAxisIndex:2,
+                yAxisIndex:2,
+                data:deas,
+                symbol:"circle",
+                symbolSize:1,
+                lineStyle: {
+                    color:'#0000ff',
+                    width: 1,
+                }
+            }
+        ]
+    };
+
+    if (option && typeof option === 'object') {
+        myChart.setOption(option,true);
+    }
+
+</script>
+</body>
+</html>
